@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import QRCode from "react-qr-code";
 import { z } from "zod";
 import {
   ArrowRight,
@@ -14,6 +16,7 @@ import {
   Sparkles,
   UserRound,
   X,
+  QrCode
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,74 +33,8 @@ import type { Tables } from "@/integrations/supabase/types";
 
 const navItems = ["Events", "About", "Register"];
 
-const coreEvents = [
-  {
-    pillar: "Build",
-    title: "Hackathon",
-    description: "Develop real-world solutions in teams within a limited time frame.",
-  },
-  {
-    pillar: "Think",
-    title: "Coding & Quiz",
-    description: "Test logical thinking, programming skills, and technical knowledge.",
-  },
-  {
-    pillar: "Present",
-    title: "Paper & Pitch",
-    description: "Showcase ideas, research, and innovations to judges and experts.",
-  },
-  {
-    pillar: "Learn",
-    title: "Workshops",
-    description: "Gain hands-on experience in emerging technologies and domains.",
-  },
-];
-
-const domainEvents = [
-  {
-    category: "CSE",
-    events: [
-      ["Coding Contest", "Solve algorithmic problems under time constraints."],
-      ["Debugging Challenge", "Identify and fix errors in given programs."],
-      ["Web Development", "Build a functional website for a given problem."],
-    ],
-  },
-  {
-    category: "ECE",
-    events: [
-      ["Circuit Debugging", "Analyze and correct faulty electronic circuits."],
-      ["PCB Design", "Convert circuit diagrams into efficient PCB layouts."],
-    ],
-  },
-  {
-    category: "MECH",
-    events: [["CAD Design", "Create accurate 2D/3D models using design tools."]],
-  },
-  {
-    category: "EEE",
-    events: [
-      ["Power Simulation", "Analyze power systems using simulation tools."],
-      ["Electrical Circuit Debugging", "Identify and resolve faults in electrical circuits."],
-    ],
-  },
-  {
-    category: "OPEN",
-    events: [
-      ["UI/UX Design", "Design intuitive and user-friendly interfaces."],
-      ["Tech Quiz", "Test knowledge across multiple technical domains."],
-      ["Project Expo", "Showcase working models and innovative projects."],
-    ],
-  },
-];
-
-const eventOptions = domainEvents.flatMap((group) =>
-  group.events.map(([title, description]) => ({
-    key: `${group.category.toLowerCase()}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
-    category: group.category,
-    title,
-    description,
-  })),
-);
+import { coreEvents, domainEvents, eventOptions } from "@/data/events";
+import { sendRegistrationToSheet } from "@/integrations/googleSheets";
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -138,6 +75,7 @@ const emptyRegistrationForm: RegistrationForm = {
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -247,8 +185,7 @@ const Index = () => {
   const closeMenu = () => setIsMenuOpen(false);
 
   const chooseEvent = (eventKey: string) => {
-    setRegistrationForm((current) => ({ ...current, event_key: eventKey }));
-    document.getElementById("register")?.scrollIntoView({ behavior: "smooth" });
+    navigate(`/event/${eventKey}`);
   };
 
   const handleAuth = async (event: FormEvent<HTMLFormElement>) => {
@@ -362,6 +299,20 @@ const Index = () => {
       return;
     }
 
+    // Send copy to Google Sheet
+    sendRegistrationToSheet({
+      event_category: eventMeta.category,
+      event_name: eventMeta.title,
+      participant_name: parsed.data.display_name,
+      contact_email: session.user.email,
+      phone: parsed.data.phone,
+      college: parsed.data.college,
+      department: parsed.data.department,
+      year_of_study: parsed.data.year_of_study,
+      team_name: parsed.data.team_name || "",
+      teammate_names: parsed.data.teammate_names || ""
+    });
+
     setProfile(profilePayload as Profile);
     const { data: refreshed } = await supabase.from("event_registrations").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     setRegistrations(refreshed ?? []);
@@ -372,16 +323,24 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-background text-foreground">
+    <main className="min-h-screen overflow-x-hidden bg-background text-foreground relative">
+      {/* Premium Seamless SVG Mandala Pattern */}
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{ 
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg stroke='%23d4af37' stroke-width='0.6' fill='none' stroke-opacity='0.08'%3E%3Ccircle cx='80' cy='80' r='60'/%3E%3Ccircle cx='80' cy='20' r='60'/%3E%3Ccircle cx='80' cy='140' r='60'/%3E%3Ccircle cx='28.03' cy='50' r='60'/%3E%3Ccircle cx='131.96' cy='50' r='60'/%3E%3Ccircle cx='28.03' cy='110' r='60'/%3E%3Ccircle cx='131.96' cy='110' r='60'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '160px 160px',
+        }}
+      />
+      <div className="relative z-10">
       <nav
         className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
           isScrolled ? "border-accent/20 bg-background/92 shadow-soft backdrop-blur-xl" : "border-accent/10 bg-background/20 backdrop-blur-md"
         }`}
       >
         <div className="section-shell flex h-20 items-center justify-between">
-          <a href="#hero" className="group text-xl tracking-normal" aria-label="இணைவுFest home">
-            <span className="font-display font-extrabold text-cream transition-colors group-hover:text-accent">இணைவு</span>
-            <span className="font-sans font-semibold text-accent">Fest</span>
+          <a href="#hero" className="group text-xl tracking-normal" aria-label="பொறிக்களம் home">
+            <span className="font-display font-extrabold text-cream transition-colors group-hover:text-accent">பொறிக்களம்</span>
           </a>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -435,8 +394,7 @@ const Index = () => {
               Flagship technology and culture summit
             </div>
             <h1 className="max-w-4xl font-display text-5xl font-extrabold leading-[0.96] tracking-normal text-cream sm:text-6xl lg:text-7xl">
-              <span>இணைவு</span>
-              <span className="font-sans font-extrabold text-accent">Fest</span> 2026
+              <span>பொறிக்களம்</span> 2026
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
               A premium gathering where technology, creativity, and community converge through sharp ideas and curated experiences.
@@ -456,10 +414,16 @@ const Index = () => {
           <div className="reveal md:justify-self-end" style={{ transitionDelay: "140ms" }}>
             <div className="relative rounded-lg border border-accent/25 bg-card-gradient p-6 shadow-soft backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1">
               <div className="mb-10 flex items-center justify-between border-b border-accent/15 pb-5">
-                <span className="text-sm font-bold uppercase tracking-[0.28em] text-soft-gold">Chennai</span>
-                <CalendarDays className="text-accent" />
+                <a href="https://maps.app.goo.gl/r6TdjkMMRtfrZbZNA" target="_blank" rel="noopener noreferrer" className="text-sm font-bold uppercase tracking-[0.28em] text-soft-gold hover:text-accent transition-colors">
+                  GCT, Coimbatore
+                </a>
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="text-accent" />
+                  <span className="text-sm font-bold uppercase tracking-[0.15em] text-accent">Coming Soon...</span>
+                </div>
               </div>
-              <p className="font-display text-4xl font-bold leading-tight text-cream">3 days of insight, showcase, and connection.</p>
+              <p className="font-display text-4xl font-bold leading-tight text-cream">1 day of insight, showcase, and connection.</p>
+              {/* Stats hidden for now
               <div className="mt-10 grid grid-cols-3 gap-3 text-center">
                 {[
                   ["40+", "Sessions"],
@@ -472,6 +436,7 @@ const Index = () => {
                   </div>
                 ))}
               </div>
+              */}
             </div>
           </div>
         </div>
@@ -480,7 +445,7 @@ const Index = () => {
       <section id="events" className="section-pad geometric-field bg-background">
         <div className="section-shell">
           <div className="reveal max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events at இணைவுFest</p>
+            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events at பொறிக்களம்</p>
             <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A multi-domain platform for builders.</h2>
             <p className="mt-5 max-w-2xl leading-7 text-muted-foreground">Structured experiences across building, thinking, presenting, and hands-on learning.</p>
           </div>
@@ -501,8 +466,8 @@ const Index = () => {
                 </div>
                 <h3 className="font-display text-2xl font-bold text-cream">{event.title}</h3>
                 <p className="mt-4 min-h-20 leading-7 text-muted-foreground">{event.description}</p>
-                <Button variant="eventOutline" className="mt-8" asChild>
-                  <a href="#register">Register interest</a>
+                <Button variant="eventOutline" className="mt-8" onClick={() => chooseEvent(`core-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`)}>
+                  Register interest
                 </Button>
               </article>
             ))}
@@ -549,7 +514,7 @@ const Index = () => {
             <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A refined platform for meaningful convergence.</h2>
           </div>
           <div className="reveal space-y-6 text-lg leading-8 text-muted-foreground" style={{ transitionDelay: "120ms" }}>
-            <p>இணைவுFest is designed as a high-end meeting ground for ambitious teams, creative leaders, and technology communities.</p>
+            <p>பொறிக்களம் is designed as a high-end meeting ground for ambitious teams, creative leaders, and technology communities.</p>
             <p>Every session, showcase, and exchange is structured for clarity: fewer distractions, stronger conversations, and a premium atmosphere.</p>
           </div>
         </div>
@@ -560,20 +525,24 @@ const Index = () => {
           <div className="reveal grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Registration</p>
-              <h2 className="mt-4 max-w-3xl font-display text-4xl font-bold text-cream md:text-5xl">Secure your place at இணைவுFest 2026.</h2>
+              <h2 className="mt-4 max-w-3xl font-display text-4xl font-bold text-cream md:text-5xl">Secure your place at பொறிக்களம் 2026.</h2>
               <p className="mt-5 max-w-2xl leading-7 text-muted-foreground">
                 Create an account, choose your event, and track your submissions from a private participant dashboard.
               </p>
-              <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="mt-10 flex flex-col gap-6">
                 {[
                   [ShieldCheck, "Secure storage", "Participant records are protected behind authenticated access."],
                   [CheckCircle2, "Clear validation", "Forms check every required detail before submission."],
                   [LayoutDashboard, "Event tracking", "Admins can review registrations event-wise."],
                 ].map(([Icon, title, copy]) => (
-                  <div key={title as string} className="rounded-lg border border-accent/15 bg-card-gradient p-5 shadow-soft">
-                    <Icon className="h-5 w-5 text-accent" />
-                    <h3 className="mt-4 font-display text-xl font-bold text-cream">{title as string}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{copy as string}</p>
+                  <div key={title as string} className="flex items-start gap-4">
+                    <div className="mt-1 shrink-0 rounded-full border border-accent/20 bg-accent/10 p-2.5 shadow-soft">
+                      <Icon className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-xl font-bold text-cream">{title as string}</h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{copy as string}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -618,23 +587,20 @@ const Index = () => {
                   </TabsContent>
                 </Tabs>
               ) : (
-                <Tabs defaultValue="register">
-                  <div className="mb-6 flex flex-col gap-4 border-b border-accent/15 pb-5 md:flex-row md:items-center md:justify-between">
+                <Tabs defaultValue="mine">
+                  <div className="mb-6 flex flex-col gap-4 border-b border-accent/15 pb-5 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="flex items-center gap-2 text-sm font-semibold text-soft-gold">
-                        <UserRound className="h-4 w-4" /> {user.email}
+                      <h3 className="font-display text-2xl font-bold text-cream">Participant workspace</h3>
+                      <p className="mt-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                        <UserRound className="h-4 w-4 text-soft-gold" /> {user.email}
                       </p>
-                      <h3 className="mt-2 font-display text-2xl font-bold text-cream">Participant workspace</h3>
                     </div>
-                    <Button variant="eventOutline" size="sm" onClick={handleSignOut}>
+                    <Button variant="eventOutline" size="sm" onClick={handleSignOut} className="shrink-0">
                       <LogOut className="h-4 w-4" /> Sign out
                     </Button>
                   </div>
 
-                  <TabsList className="grid h-auto w-full grid-cols-3 border border-accent/15 bg-background/50 p-1">
-                    <TabsTrigger value="register" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                      Register
-                    </TabsTrigger>
+                  <TabsList className="grid h-auto w-full grid-cols-2 border border-accent/15 bg-background/50 p-1">
                     <TabsTrigger value="mine" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                       My events
                     </TabsTrigger>
@@ -643,79 +609,19 @@ const Index = () => {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="register" className="mt-6">
-                    <form onSubmit={handleRegistration} className="space-y-5">
-                      <div className="space-y-2">
-                        <Label>Event</Label>
-                        <Select value={registrationForm.event_key} onValueChange={(value) => setRegistrationForm({ ...registrationForm, event_key: value })}>
-                          <SelectTrigger className="bg-background/70">
-                            <SelectValue placeholder="Choose an event" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {eventOptions.map((event) => (
-                              <SelectItem key={event.key} value={event.key}>
-                                {event.category} · {event.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.event_key && <p className="text-sm text-destructive-foreground">{errors.event_key}</p>}
-                        {registrationForm.event_key && <p className="text-sm leading-6 text-muted-foreground">{selectedEvent.description}</p>}
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                          ["display_name", "Participant name"],
-                          ["phone", "Phone"],
-                          ["college", "College"],
-                          ["department", "Department"],
-                          ["year_of_study", "Year / Level"],
-                          ["team_name", "Team name"],
-                        ].map(([key, label]) => (
-                          <div key={key} className="space-y-2">
-                            <Label htmlFor={key}>{label}</Label>
-                            <Input
-                              id={key}
-                              value={registrationForm[key as keyof RegistrationForm] ?? ""}
-                              onChange={(event) => setRegistrationForm({ ...registrationForm, [key]: event.target.value })}
-                              className="bg-background/70"
-                            />
-                            {errors[key] && <p className="text-sm text-destructive-foreground">{errors[key]}</p>}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="teammate_names">Teammates</Label>
-                          <Textarea
-                            id="teammate_names"
-                            value={registrationForm.teammate_names ?? ""}
-                            onChange={(event) => setRegistrationForm({ ...registrationForm, teammate_names: event.target.value })}
-                            className="bg-background/70"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="notes">Notes</Label>
-                          <Textarea
-                            id="notes"
-                            value={registrationForm.notes ?? ""}
-                            onChange={(event) => setRegistrationForm({ ...registrationForm, notes: event.target.value })}
-                            className="bg-background/70"
-                          />
-                        </div>
-                      </div>
-
-                      {errors.form && <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive-foreground">{errors.form}</p>}
-                      {successMessage && <p className="rounded-md border border-accent/30 bg-accent/10 p-3 text-sm font-semibold text-cream">{successMessage}</p>}
-                      <Button type="submit" variant="event" className="w-full" disabled={isRegistrationLoading}>
-                        {isRegistrationLoading && <Loader2 className="animate-spin" />}
-                        Submit event registration
-                      </Button>
-                    </form>
-                  </TabsContent>
-
                   <TabsContent value="mine" className="mt-6">
+                    <div className="mb-6 flex flex-col items-center justify-center rounded-lg border border-accent/25 bg-card-gradient p-6 shadow-soft sm:flex-row sm:justify-start sm:gap-8">
+                      <div className="rounded-xl bg-white p-4 shadow-gold">
+                        <QRCode value={`porikkalam:user:${user.id}`} size={140} />
+                      </div>
+                      <div className="mt-4 text-center sm:mt-0 sm:text-left">
+                        <h4 className="font-display text-2xl font-bold text-cream">Your Digital Pass</h4>
+                        <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+                          Present this single QR code at any event desk. Organizers will scan it to mark your attendance and verify your registered events!
+                        </p>
+                      </div>
+                    </div>
+                    <h4 className="mb-4 text-lg font-bold text-cream">Registered Events</h4>
                     <RegistrationList registrations={registrations} emptyText={isDataLoading ? "Loading registrations..." : "No event registrations yet."} />
                   </TabsContent>
 
@@ -736,12 +642,12 @@ const Index = () => {
       <footer className="border-t border-accent/15 bg-background py-10">
         <div className="section-shell flex flex-col gap-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <a href="#hero" className="text-lg tracking-normal">
-            <span className="font-display font-extrabold text-cream">இணைவு</span>
-            <span className="font-sans font-semibold text-accent">Fest</span>
+            <span className="font-display font-extrabold text-cream">பொறிக்களம்</span>
           </a>
-          <p>© 2026 இணைவுFest. Crafted for connection.</p>
+          <p>© 2026 பொறிக்களம். Crafted for connection.</p>
         </div>
       </footer>
+      </div>
     </main>
   );
 };
@@ -770,6 +676,25 @@ const RegistrationList = ({ registrations, emptyText }: { registrations: Registr
 };
 
 const AdminPanel = ({ registrations }: { registrations: Registration[] }) => {
+  const { toast } = useToast();
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [isPromoting, setIsPromoting] = useState(false);
+
+  const handleMakeAdmin = async () => {
+    if (!newAdminEmail) return;
+    setIsPromoting(true);
+    
+    const { error } = await supabase.rpc('grant_admin_role', { target_email: newAdminEmail });
+    
+    if (error) {
+      toast({ title: "Failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: `${newAdminEmail} is now an Admin!` });
+      setNewAdminEmail("");
+    }
+    setIsPromoting(false);
+  };
+
   const eventCounts = registrations.reduce<Record<string, number>>((acc, item) => {
     acc[item.event_name] = (acc[item.event_name] ?? 0) + 1;
     return acc;
@@ -777,6 +702,38 @@ const AdminPanel = ({ registrations }: { registrations: Registration[] }) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        {/* Manage Organizers UI */}
+        <div className="bg-card-gradient border border-accent/15 p-4 rounded-md w-full md:w-1/2">
+          <h4 className="text-sm font-bold text-cream mb-2">Promote Organizer to Admin</h4>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="organizer@college.edu" 
+              value={newAdminEmail}
+              onChange={(e) => setNewAdminEmail(e.target.value)}
+              className="bg-black/50 border-accent/20 text-sm"
+            />
+            <Button 
+              onClick={handleMakeAdmin} 
+              disabled={isPromoting || !newAdminEmail}
+              className="bg-accent text-black font-bold hover:bg-accent/80"
+            >
+              {isPromoting ? "Promoting..." : "Make Admin"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">They must have already created an account on the website.</p>
+        </div>
+
+        {/* Scanner Button */}
+        <Link 
+          to="/admin/scanner" 
+          className="flex items-center gap-2 bg-accent text-black px-6 py-4 rounded-md font-bold hover:bg-accent/90 transition-colors shrink-0"
+        >
+          <QrCode className="w-5 h-5" />
+          Open QR Scanner
+        </Link>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-md border border-accent/15 bg-background/45 p-4">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">Total</p>
