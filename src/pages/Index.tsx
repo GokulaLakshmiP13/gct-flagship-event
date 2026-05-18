@@ -1,22 +1,67 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, CalendarDays, Menu, Sparkles, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Cpu, Lightbulb, Menu, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 const navItems = ["Events", "About", "Register"];
 
-const events = [
+const coreEvents = [
   {
-    title: "Keynote Confluence",
-    description: "Flagship talks from founders, researchers, and creative technologists shaping connected futures.",
+    pillar: "Build",
+    title: "Hackathon",
+    description: "Develop real-world solutions in teams within a limited time frame.",
   },
   {
-    title: "Innovation Labs",
-    description: "Hands-on product showcases, AI demos, and design systems built for scale and cultural relevance.",
+    pillar: "Think",
+    title: "Coding & Quiz",
+    description: "Test logical thinking, programming skills, and technical knowledge.",
   },
   {
-    title: "Evening Exchange",
-    description: "Curated networking, live showcases, and premium hospitality for builders and decision-makers.",
+    pillar: "Present",
+    title: "Paper & Pitch",
+    description: "Showcase ideas, research, and innovations to judges and experts.",
+  },
+  {
+    pillar: "Learn",
+    title: "Workshops",
+    description: "Gain hands-on experience in emerging technologies and domains.",
+  },
+];
+
+const domainEvents = [
+  {
+    category: "CSE",
+    events: [
+      ["Coding Contest", "Solve algorithmic problems under time constraints."],
+      ["Debugging Challenge", "Identify and fix errors in given programs."],
+      ["Web Development", "Build a functional website for a given problem."],
+    ],
+  },
+  {
+    category: "ECE",
+    events: [
+      ["Circuit Debugging", "Analyze and correct faulty electronic circuits."],
+      ["PCB Design", "Convert circuit diagrams into efficient PCB layouts."],
+    ],
+  },
+  {
+    category: "MECH",
+    events: [["CAD Design", "Create accurate 2D/3D models using design tools."]],
+  },
+  {
+    category: "EEE",
+    events: [
+      ["Power Simulation", "Analyze power systems using simulation tools."],
+      ["Circuit Debugging", "Identify and resolve faults in electrical circuits."],
+    ],
+  },
+  {
+    category: "OPEN",
+    events: [
+      ["UI/UX Design", "Design intuitive and user-friendly interfaces."],
+      ["Tech Quiz", "Test knowledge across multiple technical domains."],
+      ["Project Expo", "Showcase working models and innovative projects."],
+    ],
   },
 ];
 
