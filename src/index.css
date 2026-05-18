@@ -143,36 +143,43 @@ All colors MUST be HSL.
     @apply translate-y-0 opacity-100;
   }
 
+  .geometric-field,
   .mandala-field {
     position: relative;
     isolation: isolate;
   }
 
+  .geometric-field::before,
+  .geometric-field::after,
   .mandala-field::before,
   .mandala-field::after {
     content: "";
     position: absolute;
     z-index: -1;
-    width: min(42vw, 420px);
+    width: min(38vw, 360px);
     aspect-ratio: 1;
-    border-radius: 9999px;
-    opacity: 0.14;
+    opacity: 0.08;
     background:
-      repeating-conic-gradient(from 22deg, hsl(var(--gold) / 0.55) 0deg 6deg, transparent 6deg 14deg),
-      radial-gradient(circle, transparent 0 26%, hsl(var(--gold) / 0.2) 27% 28%, transparent 29% 44%, hsl(var(--gold) / 0.18) 45% 46%, transparent 47%);
-    mask-image: radial-gradient(circle, transparent 0 17%, black 18% 70%, transparent 71%);
+      linear-gradient(45deg, transparent 48%, hsl(var(--gold) / 0.72) 49%, hsl(var(--gold) / 0.72) 51%, transparent 52%),
+      linear-gradient(-45deg, transparent 48%, hsl(var(--beige) / 0.48) 49%, hsl(var(--beige) / 0.48) 51%, transparent 52%),
+      linear-gradient(90deg, transparent 49%, hsl(var(--gold) / 0.46) 50%, transparent 51%),
+      linear-gradient(0deg, transparent 49%, hsl(var(--gold) / 0.46) 50%, transparent 51%);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(circle, black 0 52%, transparent 72%);
     pointer-events: none;
   }
 
+  .geometric-field::before,
   .mandala-field::before {
     left: max(-160px, -10vw);
     top: 6rem;
   }
 
+  .geometric-field::after,
   .mandala-field::after {
     right: max(-180px, -12vw);
     bottom: 4rem;
-    transform: rotate(18deg);
+    transform: rotate(45deg);
   }
 }
 
