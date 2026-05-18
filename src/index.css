@@ -142,6 +142,38 @@ All colors MUST be HSL.
   .reveal.is-visible {
     @apply translate-y-0 opacity-100;
   }
+
+  .mandala-field {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .mandala-field::before,
+  .mandala-field::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: min(42vw, 420px);
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    opacity: 0.14;
+    background:
+      repeating-conic-gradient(from 22deg, hsl(var(--gold) / 0.55) 0deg 6deg, transparent 6deg 14deg),
+      radial-gradient(circle, transparent 0 26%, hsl(var(--gold) / 0.2) 27% 28%, transparent 29% 44%, hsl(var(--gold) / 0.18) 45% 46%, transparent 47%);
+    mask-image: radial-gradient(circle, transparent 0 17%, black 18% 70%, transparent 71%);
+    pointer-events: none;
+  }
+
+  .mandala-field::before {
+    left: max(-160px, -10vw);
+    top: 6rem;
+  }
+
+  .mandala-field::after {
+    right: max(-180px, -12vw);
+    bottom: 4rem;
+    transform: rotate(18deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
