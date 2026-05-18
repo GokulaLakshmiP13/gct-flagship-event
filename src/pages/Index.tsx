@@ -207,26 +207,60 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="events" className="section-pad bg-background">
+      <section id="events" className="section-pad mandala-field bg-background">
         <div className="section-shell">
           <div className="reveal max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events</p>
-            <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">Built for the next generation of builders.</h2>
+            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events at இணைவுFest</p>
+            <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A multi-domain platform for builders.</h2>
+            <p className="mt-5 max-w-2xl leading-7 text-muted-foreground">Structured experiences across building, thinking, presenting, and hands-on learning.</p>
           </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event, index) => (
+
+          <div className="mt-12 flex items-center gap-3 border-b border-accent/15 pb-4">
+            <Lightbulb className="h-5 w-5 text-accent" />
+            <h3 className="font-display text-2xl font-bold text-cream">Core Experience</h3>
+          </div>
+          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {coreEvents.map((event, index) => (
               <article
                 key={event.title}
                 className="reveal group rounded-lg border border-accent/20 bg-card-gradient p-7 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/55 hover:shadow-gold-lg"
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
-                <div className="mb-8 h-1 w-12 rounded-full bg-accent transition-all duration-300 group-hover:w-20" />
+                <div className="mb-7 inline-flex rounded-full border border-accent/25 bg-background/35 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">
+                  {event.pillar}
+                </div>
                 <h3 className="font-display text-2xl font-bold text-cream">{event.title}</h3>
-                <p className="mt-4 min-h-24 leading-7 text-muted-foreground">{event.description}</p>
+                <p className="mt-4 min-h-20 leading-7 text-muted-foreground">{event.description}</p>
                 <Button variant="eventOutline" className="mt-8" asChild>
                   <a href="#register">View details</a>
                 </Button>
               </article>
+            ))}
+          </div>
+
+          <div className="mt-16 flex items-center gap-3 border-b border-accent/15 pb-4">
+            <Cpu className="h-5 w-5 text-accent" />
+            <h3 className="font-display text-2xl font-bold text-cream">Domain-wise Events</h3>
+          </div>
+          <div className="mt-6 space-y-8">
+            {domainEvents.map((group, groupIndex) => (
+              <div key={group.category} className="reveal" style={{ transitionDelay: `${groupIndex * 80}ms` }}>
+                <div className="mb-4 inline-flex rounded-full border border-accent/25 bg-card/45 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-accent">
+                  {group.category}
+                </div>
+                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                  {group.events.map(([title, description]) => (
+                    <article
+                      key={`${group.category}-${title}`}
+                      className="group rounded-lg border border-accent/15 bg-card-gradient p-6 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/50 hover:shadow-gold"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">{group.category}</p>
+                      <h4 className="mt-4 font-display text-2xl font-bold text-cream">{title}</h4>
+                      <p className="mt-3 leading-7 text-muted-foreground">{description}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
