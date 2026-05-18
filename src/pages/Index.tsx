@@ -31,6 +31,23 @@ const Index = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.16 },
+    );
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
@@ -97,7 +114,7 @@ const Index = () => {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         <div className="absolute left-1/2 top-28 h-56 w-56 -translate-x-1/2 rounded-full bg-accent/15 blur-3xl animate-slow-glow" />
         <div className="section-shell relative grid gap-12 py-16 md:grid-cols-[1.12fr_0.88fr] md:items-center lg:py-20">
-          <div className="animate-fade-up">
+          <div className="reveal">
             <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-card/35 px-4 py-2 text-sm font-semibold text-soft-gold shadow-soft backdrop-blur-md">
               <Sparkles className="h-4 w-4" />
               Flagship technology and culture summit
@@ -121,7 +138,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="animate-fade-up md:justify-self-end" style={{ animationDelay: "140ms" }}>
+          <div className="reveal md:justify-self-end" style={{ transitionDelay: "140ms" }}>
             <div className="relative rounded-lg border border-accent/25 bg-card-gradient p-6 shadow-soft backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1">
               <div className="mb-10 flex items-center justify-between border-b border-accent/15 pb-5">
                 <span className="text-sm font-bold uppercase tracking-[0.28em] text-soft-gold">Chennai</span>
@@ -147,7 +164,7 @@ const Index = () => {
 
       <section id="events" className="section-pad bg-background">
         <div className="section-shell">
-          <div className="max-w-3xl animate-fade-up">
+          <div className="reveal max-w-3xl">
             <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events</p>
             <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">Built for the next generation of builders.</h2>
           </div>
@@ -155,8 +172,8 @@ const Index = () => {
             {events.map((event, index) => (
               <article
                 key={event.title}
-                className="group animate-fade-up rounded-lg border border-accent/20 bg-card-gradient p-7 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/55 hover:shadow-gold-lg"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="reveal group rounded-lg border border-accent/20 bg-card-gradient p-7 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/55 hover:shadow-gold-lg"
+                style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <div className="mb-8 h-1 w-12 rounded-full bg-accent transition-all duration-300 group-hover:w-20" />
                 <h3 className="font-display text-2xl font-bold text-cream">{event.title}</h3>
@@ -172,11 +189,11 @@ const Index = () => {
 
       <section id="about" className="section-pad bg-section-gradient">
         <div className="section-shell grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-start">
-          <div className="animate-fade-up">
+          <div className="reveal">
             <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">About</p>
             <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A refined platform for meaningful convergence.</h2>
           </div>
-          <div className="animate-fade-up space-y-6 text-lg leading-8 text-muted-foreground" style={{ animationDelay: "120ms" }}>
+          <div className="reveal space-y-6 text-lg leading-8 text-muted-foreground" style={{ transitionDelay: "120ms" }}>
             <p>
               இணைவுFest is designed as a high-end meeting ground for ambitious teams, creative leaders, and technology communities.
             </p>
@@ -189,7 +206,7 @@ const Index = () => {
 
       <section id="register" className="section-pad bg-background">
         <div className="section-shell">
-          <div className="animate-fade-up rounded-lg border border-accent/25 bg-card-gradient p-8 shadow-soft md:p-12 lg:p-14">
+          <div className="reveal rounded-lg border border-accent/25 bg-card-gradient p-8 shadow-soft md:p-12 lg:p-14">
             <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Registration</p>
