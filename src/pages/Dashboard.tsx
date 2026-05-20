@@ -84,6 +84,7 @@ const Dashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [adminRegistrations, setAdminRegistrations] = useState<Registration[]>([]);
@@ -99,9 +100,11 @@ const Dashboard = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const userName = profile?.display_name || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Dashboard";
-  const navItems = user
-    ? ["Events", userName]
-    : ["Events", "About", "Register"];
+  const navItems = isSessionLoading
+    ? ["Events"]
+    : user
+      ? ["Events", userName]
+      : ["Events", "About", "Register"];
 
   const selectedEvent = useMemo(
     () => eventOptions.find((event) => event.key === registrationForm.event_key) ?? eventOptions[0],
@@ -141,6 +144,7 @@ const Dashboard = () => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
+      setIsSessionLoading(false);
     });
 
     return () => listener.subscription.unsubscribe();
