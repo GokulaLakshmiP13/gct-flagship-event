@@ -147,6 +147,7 @@ All colors MUST be HSL.
   .mandala-field {
     position: relative;
     isolation: isolate;
+    overflow: hidden;
   }
 
   .geometric-field::before,

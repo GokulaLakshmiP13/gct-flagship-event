@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   ArrowRight,
   CalendarDays,
+  Search,
   CheckCircle2,
   Cpu,
   LayoutDashboard,
@@ -13,6 +14,9 @@ import {
   LogOut,
   Menu,
   ShieldCheck,
+  Check,
+  CheckSquare,
+  Square,
   Sparkles,
   UserRound,
   X,
@@ -74,7 +78,7 @@ const emptyRegistrationForm: RegistrationForm = {
   notes: "",
 };
 
-const Index = () => {
+const Events = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -94,6 +98,9 @@ const Index = () => {
   const [isRegistrationLoading, setIsRegistrationLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEventsForBulk, setSelectedEventsForBulk] = useState<string[]>([]);
 
   const navItems = user 
     ? ["Events", (profile?.display_name || user.email?.split('@')[0] || "Dashboard")] 
@@ -343,9 +350,9 @@ const Index = () => {
         }`}
       >
         <div className="section-shell flex h-20 items-center justify-between">
-          <a href="#hero" className="group text-xl tracking-normal" aria-label="பொறிக்களம் home">
+          <Link to="/" className="group text-xl tracking-normal" aria-label="பொறிக்களம் home">
             <span className="font-display font-extrabold text-cream transition-colors group-hover:text-accent">பொறிக்களம்</span>
-          </a>
+          </Link>
 
           <div className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => {
@@ -361,18 +368,8 @@ const Index = () => {
                   </Link>
                 );
               }
-              if (item === "Events") {
-                return (
-                  <Link
-                    key={item}
-                    to="/events"
-                    className="text-sm font-semibold text-muted-foreground transition-colors duration-300 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    {item}
-                  </Link>
-                );
-              }
-              const href = `#${item.toLowerCase()}`;
+              const isEvents = item === "Events";
+              const href = isEvents ? "#events" : `/#${item.toLowerCase()}`;
               return (
                 <a
                   key={item}
@@ -413,19 +410,8 @@ const Index = () => {
                     </Link>
                   );
                 }
-                if (item === "Events") {
-                  return (
-                    <Link
-                      key={item}
-                      to="/events"
-                      onClick={closeMenu}
-                      className="rounded-md px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      {item}
-                    </Link>
-                  );
-                }
-                const href = `#${item.toLowerCase()}`;
+                const isEvents = item === "Events";
+                const href = isEvents ? "#events" : `/#${item.toLowerCase()}`;
                 return (
                   <a
                     key={item}
@@ -442,86 +428,155 @@ const Index = () => {
         </div>
       </nav>
 
-      <section id="hero" className="relative flex min-h-[92vh] items-center bg-hero-gradient pt-24">
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
-        <div className="absolute left-1/2 top-28 h-56 w-56 -translate-x-1/2 rounded-full bg-accent/15 blur-3xl animate-slow-glow" />
-        <div className="section-shell relative grid gap-12 py-16 md:grid-cols-[1.12fr_0.88fr] md:items-center lg:py-20">
-          <div className="reveal">
-            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-card/35 px-4 py-2 text-sm font-semibold text-soft-gold shadow-soft backdrop-blur-md">
-              <Sparkles className="h-4 w-4" />
-              Flagship technology and culture summit
-            </div>
-            <h1 className="max-w-4xl font-display text-5xl font-extrabold leading-[0.96] tracking-normal text-cream sm:text-6xl lg:text-7xl">
-              <span>பொறிக்களம்</span> 2026
-            </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-              A premium gathering where technology, creativity, and community converge through sharp ideas and curated experiences.
-            </p>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <Button variant="event" size="lg" asChild>
-                <Link to="/dashboard">
-                  {isAdmin ? "Open Dashboard" : "Register now"} <ArrowRight />
-                </Link>
-              </Button>
-              <Button variant="eventOutline" size="lg" asChild>
-                <Link to="/events">Explore events</Link>
-              </Button>
-            </div>
+      <div className="h-20" />
+
+      <section id="events" className="section-pad geometric-field bg-background">
+        <div className="section-shell">
+          <div className="reveal max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events at பொறிக்களம்</p>
+            <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A multi-domain platform for builders.</h2>
+            <p className="mt-5 max-w-2xl leading-7 text-muted-foreground">Structured experiences across building, thinking, presenting, and hands-on learning.</p>
           </div>
 
-          <div className="reveal md:justify-self-end" style={{ transitionDelay: "140ms" }}>
-            <div className="relative rounded-lg border border-accent/25 bg-card-gradient p-6 shadow-soft backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1">
-              <div className="mb-10 flex items-center justify-between border-b border-accent/15 pb-5">
-                <a href="https://maps.app.goo.gl/r6TdjkMMRtfrZbZNA" target="_blank" rel="noopener noreferrer" className="text-sm font-bold uppercase tracking-[0.28em] text-soft-gold hover:text-accent transition-colors">
-                  GCT, Coimbatore
-                </a>
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="text-accent" />
-                  <span className="text-sm font-bold uppercase tracking-[0.15em] text-accent">Coming Soon...</span>
+          <div className="mt-12 flex items-center gap-3 border-b border-accent/15 pb-4">
+            <Lightbulb className="h-5 w-5 text-accent" />
+            <h3 className="font-display text-2xl font-bold text-cream">Core Experience</h3>
+          </div>
+          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {coreEvents.map((event, index) => (
+              <article
+                key={event.title}
+                className="reveal group rounded-lg border border-accent/20 bg-card-gradient p-7 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/55 hover:shadow-gold-lg"
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                <div className="mb-7 inline-flex rounded-full border border-accent/25 bg-background/35 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">
+                  {event.pillar}
                 </div>
+                <h3 className="font-display text-2xl font-bold text-cream">{event.title}</h3>
+                <p className="mt-4 min-h-20 leading-7 text-muted-foreground">{event.description}</p>
+                {!isAdmin && (
+                  <Button variant="eventOutline" className="mt-8" onClick={() => chooseEvent(`core-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`)}>
+                    Register interest
+                  </Button>
+                )}
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-16 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-accent/15 pb-4">
+            <div className="flex items-center gap-3">
+              <Cpu className="h-5 w-5 text-accent" />
+              <h3 className="font-display text-2xl font-bold text-cream">Explore Events</h3>
+            </div>
+            
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search events..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-background/50 border-accent/20"
+                />
               </div>
-              <p className="font-display text-4xl font-bold leading-tight text-cream">1 day of insight, showcase, and connection.</p>
-              {/* Stats hidden for now
-              <div className="mt-10 grid grid-cols-3 gap-3 text-center">
-                {[
-                  ["40+", "Sessions"],
-                  ["120", "Speakers"],
-                  ["8k", "Guests"],
-                ].map(([value, label]) => (
-                  <div key={label} className="rounded-md border border-accent/15 bg-background/40 p-4">
-                    <div className="text-2xl font-extrabold text-accent">{value}</div>
-                    <div className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
-                  </div>
-                ))}
-              </div>
-              */}
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[140px] bg-background/50 border-accent/20">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Categories</SelectItem>
+                  <SelectItem value="CSE">CSE</SelectItem>
+                  <SelectItem value="ECE">ECE</SelectItem>
+                  <SelectItem value="EEE">EEE</SelectItem>
+                  <SelectItem value="MECH">MECH</SelectItem>
+                  <SelectItem value="OPEN">OPEN</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
+          {selectedEventsForBulk.length > 0 && !isAdmin && (
+            <div className="sticky top-24 z-40 mt-6 flex items-center justify-between bg-card-gradient border border-accent/30 p-4 rounded-lg shadow-gold-lg backdrop-blur-xl">
+              <div>
+                <p className="text-cream font-bold">{selectedEventsForBulk.length} event{selectedEventsForBulk.length > 1 ? 's' : ''} selected</p>
+                <p className="text-xs text-muted-foreground">Register for multiple events at once.</p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="ghost" onClick={() => setSelectedEventsForBulk([])} className="text-muted-foreground">Clear</Button>
+                <Button variant="event" onClick={() => chooseEvent(selectedEventsForBulk.join(','))}>
+                  Register Collectively
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {domainEvents
+              .flatMap((group) => group.events.map(([title, description]) => ({ category: group.category, title, description })))
+              .filter(event => selectedCategory === "All" || event.category === selectedCategory)
+              .filter(event => event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.description.toLowerCase().includes(searchQuery.toLowerCase()))
+              .sort((a, b) => a.title.localeCompare(b.title))
+              .map((event) => {
+                const option = eventOptions.find((e) => e.title === event.title && e.category === event.category);
+                if (!option) return null;
+                const isSelected = selectedEventsForBulk.includes(option.key);
+                
+                return (
+                  <article
+                    key={option.key}
+                    onClick={() => {
+                      if (isAdmin) return;
+                      setSelectedEventsForBulk(prev => 
+                        prev.includes(option.key) ? prev.filter(k => k !== option.key) : [...prev, option.key]
+                      );
+                    }}
+                    className={`group relative rounded-lg border p-6 shadow-soft transition-all duration-300 cursor-pointer hover:-translate-y-1 ${
+                      isSelected ? 'border-accent bg-accent/10 shadow-gold' : 'border-accent/15 bg-card-gradient hover:border-accent/50 hover:shadow-gold'
+                    }`}
+                  >
+                    {!isAdmin && (
+                      <div className="absolute right-4 top-4">
+                        {isSelected ? <CheckSquare className="text-accent w-5 h-5" /> : <Square className="text-muted-foreground w-5 h-5 opacity-40 group-hover:opacity-100" />}
+                      </div>
+                    )}
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">{event.category}</p>
+                    <h4 className="mt-4 font-display text-2xl font-bold text-cream pr-6">{event.title}</h4>
+                    <p className="mt-3 leading-7 text-muted-foreground">{event.description}</p>
+                    {!isAdmin && (
+                      <div className="mt-6 flex justify-between items-center">
+                        <Button 
+                          variant={isSelected ? "default" : "eventOutline"} 
+                          size="sm" 
+                          className={isSelected ? "bg-accent text-black font-bold" : ""}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (selectedEventsForBulk.length > 0 && !isSelected) {
+                              setSelectedEventsForBulk(prev => [...prev, option.key]);
+                            } else {
+                              chooseEvent(option.key);
+                            }
+                          }}
+                        >
+                          {isSelected ? "Selected" : "Register"}
+                        </Button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+          </div>
         </div>
       </section>
 
 
-
-      <section id="about" className="section-pad geometric-field bg-section-gradient">
-        <div className="section-shell grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-start">
-          <div className="reveal">
-            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">About</p>
-            <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A refined platform for meaningful convergence.</h2>
-          </div>
-          <div className="reveal space-y-6 text-lg leading-8 text-muted-foreground" style={{ transitionDelay: "120ms" }}>
-            <p>பொறிக்களம் is designed as a high-end meeting ground for ambitious teams, creative leaders, and technology communities.</p>
-            <p>Every session, showcase, and exchange is structured for clarity: fewer distractions, stronger conversations, and a premium atmosphere.</p>
-          </div>
-        </div>
-      </section>
 
 
 
       <footer className="border-t border-accent/15 bg-background py-10">
         <div className="section-shell flex flex-col gap-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <a href="#hero" className="text-lg tracking-normal">
+          <Link to="/" className="text-lg tracking-normal">
             <span className="font-display font-extrabold text-cream">பொறிக்களம்</span>
-          </a>
+          </Link>
           <p>© 2026 பொறிக்களம். Crafted for connection.</p>
         </div>
       </footer>
@@ -532,4 +587,4 @@ const Index = () => {
 
 
 
-export default Index;
+export default Events;

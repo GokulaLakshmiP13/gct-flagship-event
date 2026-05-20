@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          id: string
+          key: string
+          title: string
+          description: string
+          category: string
+          pillar: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          title: string
+          description: string
+          category: string
+          pillar?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          title?: string
+          description?: string
+          category?: string
+          pillar?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       event_registrations: {
         Row: {
           college: string
@@ -81,6 +111,7 @@ export type Database = {
           department: string | null
           display_name: string
           id: string
+          managed_event: string | null
           phone: string | null
           updated_at: string
           user_id: string

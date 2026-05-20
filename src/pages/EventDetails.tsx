@@ -54,9 +54,16 @@ const EventDetails = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isRegistrationLoading, setIsRegistrationLoading] = useState(false);
-  const [registrationStatus, setRegistrationStatus] = useState<"none" | "just_registered" | "already_registered">("none");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<"none" | "just_registered" | "already_registered" | "partial_registered">("none");
   
-  const eventMeta = eventOptions.find((e) => e.key === eventId);
+  const eventKeys = eventId?.split(",") || [];
+  const eventsMeta = eventKeys.map((key) => eventOptions.find((e) => e.key === key)).filter(Boolean) as typeof eventOptions;
+  
+  const isBulk = eventsMeta.length > 1;
+  const totalFee = eventsMeta.reduce((sum, e) => sum + (e.fee || 150), 0);
+  const eventTitle = isBulk ? "Multiple Events" : eventsMeta[0]?.title;
+  const eventCategory = isBulk ? "Bulk Registration" : eventsMeta[0]?.category;
 
   const [registrationForm, setRegistrationForm] = useState<RegistrationForm>({
     display_name: "",
@@ -91,12 +98,16 @@ const EventDetails = () => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       
-      if (data.session?.user && eventMeta) {
+      if (data.session?.user && eventsMeta.length > 0) {
         // Load profile and check registration
-        const [{ data: profileData }, { data: regData }] = await Promise.all([
+        const [{ data: profileData }, { data: regData }, { data: roleData }] = await Promise.all([
           supabase.from("profiles").select("*").eq("user_id", data.session.user.id).maybeSingle(),
-          supabase.from("event_registrations").select("*").eq("user_id", data.session.user.id).eq("event_key", eventMeta.key).maybeSingle()
+          supabase.from("event_registrations").select("event_key").eq("user_id", data.session.user.id).in("event_key", eventKeys),
+          supabase.from("user_roles").select("role").eq("user_id", data.session.user.id)
         ]);
+        
+        const admin = roleData?.some((item) => item.role === "admin") ?? false;
+        setIsAdmin(admin);
 
         if (profileData) {
           setRegistrationForm((current) => ({
@@ -121,8 +132,12 @@ const EventDetails = () => {
           });
         }
 
-        if (regData) {
-          setRegistrationStatus("already_registered");
+        if (regData && regData.length > 0) {
+          if (regData.length === eventKeys.length) {
+            setRegistrationStatus("already_registered");
+          } else {
+            setRegistrationStatus("partial_registered");
+          }
         } else {
           setRegistrationStatus("none");
         }
@@ -131,9 +146,9 @@ const EventDetails = () => {
     };
 
     checkUser();
-  }, [eventMeta]);
+  }, [eventId]);
 
-  if (!eventMeta) {
+  if (eventsMeta.length === 0) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-center">
         <h1 className="font-display text-4xl font-bold text-cream">Event Not Found</h1>
@@ -187,17 +202,17 @@ const EventDetails = () => {
     // Initialize Razorpay Payment
     const options = {
       key: "rzp_test_dummy_key", // REPLACE WITH REAL RAZORPAY KEY IN PRODUCTION
-      amount: (eventMeta.fee || 150) * 100, // Amount in paise
+      amount: totalFee * 100, // Amount in paise
       currency: "INR",
       name: "பொறிக்களம் 2026",
-      description: `Registration for ${eventMeta.title}`,
+      description: `Registration for ${eventTitle}`,
       handler: async function (response: any) {
         // Payment successful, now save registration
-        const { error: registrationError } = await supabase.from("event_registrations").insert({
+        const inserts = eventsMeta.map((meta) => ({
           user_id: user.id,
-          event_key: eventMeta.key,
-          event_name: eventMeta.title,
-          event_category: eventMeta.category,
+          event_key: meta.key,
+          event_name: meta.title,
+          event_category: meta.category,
           participant_name: parsed.data.display_name,
           contact_email: session.user.email,
           phone: parsed.data.phone,
@@ -207,31 +222,33 @@ const EventDetails = () => {
           team_name: parsed.data.team_name || null,
           teammate_names: parsed.data.teammate_names || null,
           notes: parsed.data.notes || null,
-          // You might want to add a payment_id column in Supabase
-          // payment_id: response.razorpay_payment_id 
-        });
+        }));
+
+        const { error: registrationError } = await supabase.from("event_registrations").insert(inserts);
 
         setIsRegistrationLoading(false);
 
         if (registrationError) {
           toast({ title: "Registration Error", description: registrationError.message, variant: "destructive" });
         } else {
-          // Send copy to Google Sheet
-          sendRegistrationToSheet({
-            event_category: eventMeta.category,
-            event_name: eventMeta.title,
-            participant_name: parsed.data.display_name,
-            contact_email: session.user.email,
-            phone: parsed.data.phone,
-            college: parsed.data.college,
-            department: parsed.data.department,
-            year_of_study: parsed.data.year_of_study,
-            team_name: parsed.data.team_name || "",
-            teammate_names: parsed.data.teammate_names || ""
+          // Send copy to Google Sheet for each event
+          eventsMeta.forEach((meta) => {
+            sendRegistrationToSheet({
+              event_category: meta.category,
+              event_name: meta.title,
+              participant_name: parsed.data.display_name,
+              contact_email: session.user.email,
+              phone: parsed.data.phone,
+              college: parsed.data.college,
+              department: parsed.data.department,
+              year_of_study: parsed.data.year_of_study,
+              team_name: parsed.data.team_name || "",
+              teammate_names: parsed.data.teammate_names || ""
+            });
           });
 
           setRegistrationStatus("just_registered");
-          toast({ title: "Registration Successful!", description: `You are now registered for ${eventMeta.title}.` });
+          toast({ title: "Registration Successful!", description: `You are now registered for ${eventTitle}.` });
         }
       },
       prefill: {
@@ -278,12 +295,30 @@ const EventDetails = () => {
         <div className="grid gap-12 md:grid-cols-[1fr_400px]">
           <div>
             <div className="inline-flex rounded-full border border-accent/25 bg-card/45 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-accent mb-6">
-              {eventMeta.category}
+              {eventCategory}
             </div>
-            <h1 className="font-display text-4xl font-bold text-cream mb-4">{eventMeta.title}</h1>
-            <p className="text-lg leading-relaxed text-muted-foreground mb-8">
-              {eventMeta.description}
-            </p>
+            <h1 className="font-display text-4xl font-bold text-cream mb-4">{eventTitle}</h1>
+            
+            {isBulk ? (
+              <div className="mb-8">
+                <p className="text-lg leading-relaxed text-muted-foreground mb-4">You are registering collectively for:</p>
+                <ul className="space-y-3">
+                  {eventsMeta.map(meta => (
+                    <li key={meta.key} className="flex items-start gap-2 bg-accent/5 p-3 rounded-lg border border-accent/10">
+                      <ShieldCheck className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-cream text-sm">{meta.title}</p>
+                        <p className="text-xs text-muted-foreground">{meta.category}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-lg leading-relaxed text-muted-foreground mb-8">
+                {eventsMeta[0]?.description}
+              </p>
+            )}
 
             <div className="grid sm:grid-cols-2 gap-4 mb-10">
               <div className="flex items-center gap-3 p-4 rounded-lg border border-accent/15 bg-card-gradient">
@@ -309,31 +344,44 @@ const EventDetails = () => {
             </h3>
 
             <div className="flex items-center justify-between mb-8 p-4 rounded-lg bg-background/50 border border-accent/15">
-              <span className="font-semibold text-muted-foreground">Registration Fee</span>
+              <span className="font-semibold text-muted-foreground">Total Fee {isBulk && `(${eventsMeta.length} events)`}</span>
               <span className="text-2xl font-bold text-accent flex items-center gap-1">
                 <IndianRupee className="h-5 w-5" />
-                {eventMeta.fee || 150}
+                {totalFee}
               </span>
             </div>
 
             {isDataLoading ? (
               <div className="flex justify-center p-8"><Loader2 className="animate-spin text-accent h-8 w-8" /></div>
+            ) : isAdmin ? (
+              <div className="text-center space-y-4 py-6 bg-accent/5 rounded-lg border border-accent/20">
+                <ShieldCheck className="h-12 w-12 text-accent mx-auto" />
+                <h4 className="text-xl font-bold text-cream">Admin Access</h4>
+                <p className="text-sm text-muted-foreground px-4">Admins cannot register for events.</p>
+                <div className="pt-2">
+                  <Button variant="eventOutline" onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+                </div>
+              </div>
             ) : !user ? (
               <div className="text-center space-y-4">
                 <p className="text-muted-foreground">You must be signed in to register for events.</p>
-                <Button className="w-full" variant="event" onClick={() => navigate("/#register")}>Sign in to continue</Button>
+                <Button className="w-full" variant="event" onClick={() => navigate("/dashboard")}>Sign in to continue</Button>
               </div>
             ) : registrationStatus !== "none" ? (
               <div className="text-center space-y-4 py-6 bg-accent/5 rounded-lg border border-accent/20">
                 <ShieldCheck className="h-12 w-12 text-accent mx-auto" />
                 <h4 className="text-xl font-bold text-cream">
-                  {registrationStatus === "just_registered" ? "Registered Successfully" : "Already Registered"}
+                  {registrationStatus === "just_registered" ? "Registered Successfully" : registrationStatus === "partial_registered" ? "Partially Registered" : "Already Registered"}
                 </h4>
-                <p className="text-sm text-muted-foreground px-4">You have successfully registered for this event. Check your dashboard for more details.</p>
-                {eventMeta.whatsappLink && (
+                <p className="text-sm text-muted-foreground px-4">
+                  {registrationStatus === "partial_registered" 
+                    ? "You have already registered for some of these events. Please select only new events to register." 
+                    : `You have successfully registered for ${eventTitle}. Check your dashboard for more details.`}
+                </p>
+                {!isBulk && eventsMeta[0]?.whatsappLink && registrationStatus !== "partial_registered" && (
                   <div className="pt-2">
                     <a 
-                      href={eventMeta.whatsappLink} 
+                      href={eventsMeta[0].whatsappLink} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="inline-flex h-10 items-center justify-center rounded-md bg-[#25D366] px-8 text-sm font-medium text-white transition-colors hover:bg-[#128C7E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background"
