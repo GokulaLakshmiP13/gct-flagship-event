@@ -95,8 +95,9 @@ const Index = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  const userName = profile?.display_name || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Dashboard";
   const navItems = user 
-    ? ["Events", (profile?.display_name || user.email?.split('@')[0] || "Dashboard")] 
+    ? ["Events", userName] 
     : ["Events", "About", "Register"];
 
   const selectedEvent = useMemo(
@@ -349,7 +350,7 @@ const Index = () => {
 
           <div className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => {
-              const isRegisterOrUser = item === "Register" || item === (profile?.display_name || user?.email?.split('@')[0] || "Dashboard");
+              const isRegisterOrUser = item === "Register" || item === userName;
               if (isRegisterOrUser) {
                 return (
                   <Link
@@ -400,7 +401,7 @@ const Index = () => {
           <div className="overflow-hidden">
             <div className="flex flex-col gap-2 rounded-md border border-accent/15 bg-card/70 p-3 backdrop-blur-xl">
               {navItems.map((item) => {
-                const isRegisterOrUser = item === "Register" || item === (profile?.display_name || user?.email?.split('@')[0] || "Dashboard");
+                const isRegisterOrUser = item === "Register" || item === userName;
                 if (isRegisterOrUser) {
                   return (
                     <Link

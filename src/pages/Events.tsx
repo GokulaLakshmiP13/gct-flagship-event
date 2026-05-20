@@ -102,8 +102,9 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEventsForBulk, setSelectedEventsForBulk] = useState<string[]>([]);
 
-  const navItems = user 
-    ? ["Events", (profile?.display_name || user.email?.split('@')[0] || "Dashboard")] 
+  const userName = profile?.display_name || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Dashboard";
+  const navItems = user
+    ? ["Events", userName]
     : ["Events", "About", "Register"];
 
   const selectedEvent = useMemo(
@@ -213,10 +214,10 @@ const Events = () => {
     const result =
       authMode === "signup"
         ? await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: window.location.origin, data: { display_name: displayName || email.split("@")[0] } },
-          })
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin, data: { display_name: displayName || email.split("@")[0] } },
+        })
         : await supabase.auth.signInWithPassword({ email, password });
 
     if (result.error) {
@@ -336,75 +337,32 @@ const Events = () => {
   return (
     <main className="min-h-screen bg-background text-foreground relative">
       {/* Premium Seamless SVG Mandala Pattern */}
-      <div 
+      <div
         className="fixed inset-0 z-0 pointer-events-none"
-        style={{ 
+        style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg stroke='%23d4af37' stroke-width='0.6' fill='none' stroke-opacity='0.08'%3E%3Ccircle cx='80' cy='80' r='60'/%3E%3Ccircle cx='80' cy='20' r='60'/%3E%3Ccircle cx='80' cy='140' r='60'/%3E%3Ccircle cx='28.03' cy='50' r='60'/%3E%3Ccircle cx='131.96' cy='50' r='60'/%3E%3Ccircle cx='28.03' cy='110' r='60'/%3E%3Ccircle cx='131.96' cy='110' r='60'/%3E%3C/g%3E%3C/svg%3E")`,
           backgroundSize: '160px 160px',
         }}
       />
       <div className="relative z-10">
-      <nav
-        className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
-          isScrolled ? "border-accent/20 bg-background/92 shadow-soft backdrop-blur-xl" : "border-accent/10 bg-background/20 backdrop-blur-md"
-        }`}
-      >
-        <div className="section-shell flex h-20 items-center justify-between">
-          <Link to="/" className="group text-xl tracking-normal" aria-label="பொறிக்களம் home">
-            <span className="font-display font-extrabold text-cream transition-colors group-hover:text-accent">பொறிக்களம்</span>
-          </Link>
+        <nav
+          className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${isScrolled ? "border-accent/20 bg-background/92 shadow-soft backdrop-blur-xl" : "border-accent/10 bg-background/20 backdrop-blur-md"
+            }`}
+        >
+          <div className="section-shell flex h-20 items-center justify-between">
+            <Link to="/" className="group text-xl tracking-normal" aria-label="பொறிக்களம் home">
+              <span className="font-display font-extrabold text-cream transition-colors group-hover:text-accent">பொறிக்களம்</span>
+            </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
-            {navItems.map((item) => {
-              const isRegisterOrUser = item === "Register" || item === (profile?.display_name || user?.email?.split('@')[0] || "Dashboard");
-              if (isRegisterOrUser) {
-                return (
-                  <Link
-                    key={item}
-                    to="/dashboard"
-                    className="text-sm font-semibold text-muted-foreground transition-colors duration-300 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    {item}
-                  </Link>
-                );
-              }
-              const isEvents = item === "Events";
-              const href = isEvents ? "#events" : `/#${item.toLowerCase()}`;
-              return (
-                <a
-                  key={item}
-                  href={href}
-                  className="text-sm font-semibold text-muted-foreground transition-colors duration-300 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  {item}
-                </a>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-accent/25 bg-card/40 text-accent transition-all duration-300 hover:border-accent hover:shadow-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
-            onClick={() => setIsMenuOpen((value) => !value)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-
-        <div className={`section-shell grid transition-all duration-300 md:hidden ${isMenuOpen ? "grid-rows-[1fr] pb-5 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-          <div className="overflow-hidden">
-            <div className="flex flex-col gap-2 rounded-md border border-accent/15 bg-card/70 p-3 backdrop-blur-xl">
+            <div className="hidden items-center gap-8 md:flex">
               {navItems.map((item) => {
-                const isRegisterOrUser = item === "Register" || item === (profile?.display_name || user?.email?.split('@')[0] || "Dashboard");
+                const isRegisterOrUser = item === "Register" || item === userName;
                 if (isRegisterOrUser) {
                   return (
                     <Link
                       key={item}
                       to="/dashboard"
-                      onClick={closeMenu}
-                      className="rounded-md px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="text-sm font-semibold text-muted-foreground transition-colors duration-300 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {item}
                     </Link>
@@ -416,170 +374,211 @@ const Events = () => {
                   <a
                     key={item}
                     href={href}
-                    onClick={closeMenu}
-                    className="rounded-md px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="text-sm font-semibold text-muted-foreground transition-colors duration-300 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {item}
                   </a>
                 );
               })}
             </div>
-          </div>
-        </div>
-      </nav>
 
-      <div className="h-20" />
-
-      <section id="events" className="section-pad geometric-field bg-background">
-        <div className="section-shell">
-          <div className="reveal max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events at பொறிக்களம்</p>
-            <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A multi-domain platform for builders.</h2>
-            <p className="mt-5 max-w-2xl leading-7 text-muted-foreground">Structured experiences across building, thinking, presenting, and hands-on learning.</p>
+            <button
+              type="button"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-accent/25 bg-card/40 text-accent transition-all duration-300 hover:border-accent hover:shadow-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+              onClick={() => setIsMenuOpen((value) => !value)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
           </div>
 
-          <div className="mt-12 flex items-center gap-3 border-b border-accent/15 pb-4">
-            <Lightbulb className="h-5 w-5 text-accent" />
-            <h3 className="font-display text-2xl font-bold text-cream">Core Experience</h3>
+          <div className={`section-shell grid transition-all duration-300 md:hidden ${isMenuOpen ? "grid-rows-[1fr] pb-5 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+            <div className="overflow-hidden">
+              <div className="flex flex-col gap-2 rounded-md border border-accent/15 bg-card/70 p-3 backdrop-blur-xl">
+                {navItems.map((item) => {
+                  const isRegisterOrUser = item === "Register" || item === userName;
+                  if (isRegisterOrUser) {
+                    return (
+                      <Link
+                        key={item}
+                        to="/dashboard"
+                        onClick={closeMenu}
+                        className="rounded-md px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {item}
+                      </Link>
+                    );
+                  }
+                  const isEvents = item === "Events";
+                  const href = isEvents ? "#events" : `/#${item.toLowerCase()}`;
+                  return (
+                    <a
+                      key={item}
+                      href={href}
+                      onClick={closeMenu}
+                      className="rounded-md px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {item}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {coreEvents.map((event, index) => (
-              <article
-                key={event.title}
-                className="reveal group rounded-lg border border-accent/20 bg-card-gradient p-7 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/55 hover:shadow-gold-lg"
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                <div className="mb-7 inline-flex rounded-full border border-accent/25 bg-background/35 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">
-                  {event.pillar}
+        </nav>
+
+        <div className="h-20" />
+
+        <section id="events" className="section-pad geometric-field bg-background">
+          <div className="section-shell">
+            <div className="reveal max-w-3xl">
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-accent">Events at பொறிக்களம்</p>
+              <h2 className="mt-4 font-display text-4xl font-bold text-cream md:text-5xl">A multi-domain platform for builders.</h2>
+              <p className="mt-5 max-w-2xl leading-7 text-muted-foreground">Structured experiences across building, thinking, presenting, and hands-on learning.</p>
+            </div>
+
+            <div className="mt-12 flex items-center gap-3 border-b border-accent/15 pb-4">
+              <Lightbulb className="h-5 w-5 text-accent" />
+              <h3 className="font-display text-2xl font-bold text-cream">Core Experience</h3>
+            </div>
+            <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {coreEvents.map((event, index) => (
+                <article
+                  key={event.title}
+                  className="reveal group rounded-lg border border-accent/20 bg-card-gradient p-7 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:border-accent/55 hover:shadow-gold-lg"
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                >
+                  <div className="mb-7 inline-flex rounded-full border border-accent/25 bg-background/35 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">
+                    {event.pillar}
+                  </div>
+                  <h3 className="font-display text-2xl font-bold text-cream">{event.title}</h3>
+                  <p className="mt-4 min-h-20 leading-7 text-muted-foreground">{event.description}</p>
+                  {!isAdmin && (
+                    <Button variant="eventOutline" className="mt-8" onClick={() => chooseEvent(`core-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`)}>
+                      Register
+                    </Button>
+                  )}
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-16 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-accent/15 pb-4">
+              <div className="flex items-center gap-3">
+                <Cpu className="h-5 w-5 text-accent" />
+                <h3 className="font-display text-2xl font-bold text-cream">Explore Events</h3>
+              </div>
+
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search events..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 bg-background/50 border-accent/20"
+                  />
                 </div>
-                <h3 className="font-display text-2xl font-bold text-cream">{event.title}</h3>
-                <p className="mt-4 min-h-20 leading-7 text-muted-foreground">{event.description}</p>
-                {!isAdmin && (
-                  <Button variant="eventOutline" className="mt-8" onClick={() => chooseEvent(`core-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`)}>
-                    Register interest
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[140px] bg-background/50 border-accent/20">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Categories</SelectItem>
+                    <SelectItem value="CSE">CSE</SelectItem>
+                    <SelectItem value="ECE">ECE</SelectItem>
+                    <SelectItem value="EEE">EEE</SelectItem>
+                    <SelectItem value="MECH">MECH</SelectItem>
+                    <SelectItem value="OPEN">OPEN</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {selectedEventsForBulk.length > 0 && !isAdmin && (
+              <div className="sticky top-24 z-40 mt-6 flex items-center justify-between bg-card-gradient border border-accent/30 p-4 rounded-lg shadow-gold-lg backdrop-blur-xl">
+                <div>
+                  <p className="text-cream font-bold">{selectedEventsForBulk.length} event{selectedEventsForBulk.length > 1 ? 's' : ''} selected</p>
+                  <p className="text-xs text-muted-foreground">Register for multiple events at once.</p>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="ghost" onClick={() => setSelectedEventsForBulk([])} className="text-muted-foreground">Clear</Button>
+                  <Button variant="event" onClick={() => chooseEvent(selectedEventsForBulk.join(','))}>
+                    Register Collectively
                   </Button>
-                )}
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-16 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-accent/15 pb-4">
-            <div className="flex items-center gap-3">
-              <Cpu className="h-5 w-5 text-accent" />
-              <h3 className="font-display text-2xl font-bold text-cream">Explore Events</h3>
-            </div>
-            
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search events..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-background/50 border-accent/20"
-                />
+                </div>
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[140px] bg-background/50 border-accent/20">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Categories</SelectItem>
-                  <SelectItem value="CSE">CSE</SelectItem>
-                  <SelectItem value="ECE">ECE</SelectItem>
-                  <SelectItem value="EEE">EEE</SelectItem>
-                  <SelectItem value="MECH">MECH</SelectItem>
-                  <SelectItem value="OPEN">OPEN</SelectItem>
-                </SelectContent>
-              </Select>
+            )}
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {domainEvents
+                .flatMap((group) => group.events.map(([title, description]) => ({ category: group.category, title, description })))
+                .filter(event => selectedCategory === "All" || event.category === selectedCategory)
+                .filter(event => event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                .sort((a, b) => a.title.localeCompare(b.title))
+                .map((event) => {
+                  const option = eventOptions.find((e) => e.title === event.title && e.category === event.category);
+                  if (!option) return null;
+                  const isSelected = selectedEventsForBulk.includes(option.key);
+
+                  return (
+                    <article
+                      key={option.key}
+                      onClick={() => {
+                        if (isAdmin) return;
+                        setSelectedEventsForBulk(prev =>
+                          prev.includes(option.key) ? prev.filter(k => k !== option.key) : [...prev, option.key]
+                        );
+                      }}
+                      className={`group relative rounded-lg border p-6 shadow-soft transition-all duration-300 cursor-pointer hover:-translate-y-1 ${isSelected ? 'border-accent bg-accent/10 shadow-gold' : 'border-accent/15 bg-card-gradient hover:border-accent/50 hover:shadow-gold'
+                        }`}
+                    >
+                      {!isAdmin && (
+                        <div className="absolute right-4 top-4">
+                          {isSelected ? <CheckSquare className="text-accent w-5 h-5" /> : <Square className="text-muted-foreground w-5 h-5 opacity-40 group-hover:opacity-100" />}
+                        </div>
+                      )}
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">{event.category}</p>
+                      <h4 className="mt-4 font-display text-2xl font-bold text-cream pr-6">{event.title}</h4>
+                      <p className="mt-3 leading-7 text-muted-foreground">{event.description}</p>
+                      {!isAdmin && (
+                        <div className="mt-6 flex justify-between items-center">
+                          <Button
+                            variant={isSelected ? "default" : "eventOutline"}
+                            size="sm"
+                            className={isSelected ? "bg-accent text-black font-bold" : ""}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (selectedEventsForBulk.length > 0 && !isSelected) {
+                                setSelectedEventsForBulk(prev => [...prev, option.key]);
+                              } else {
+                                chooseEvent(option.key);
+                              }
+                            }}
+                          >
+                            {isSelected ? "Selected" : "Register"}
+                          </Button>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
             </div>
           </div>
+        </section>
 
-          {selectedEventsForBulk.length > 0 && !isAdmin && (
-            <div className="sticky top-24 z-40 mt-6 flex items-center justify-between bg-card-gradient border border-accent/30 p-4 rounded-lg shadow-gold-lg backdrop-blur-xl">
-              <div>
-                <p className="text-cream font-bold">{selectedEventsForBulk.length} event{selectedEventsForBulk.length > 1 ? 's' : ''} selected</p>
-                <p className="text-xs text-muted-foreground">Register for multiple events at once.</p>
-              </div>
-              <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => setSelectedEventsForBulk([])} className="text-muted-foreground">Clear</Button>
-                <Button variant="event" onClick={() => chooseEvent(selectedEventsForBulk.join(','))}>
-                  Register Collectively
-                </Button>
-              </div>
-            </div>
-          )}
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {domainEvents
-              .flatMap((group) => group.events.map(([title, description]) => ({ category: group.category, title, description })))
-              .filter(event => selectedCategory === "All" || event.category === selectedCategory)
-              .filter(event => event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.description.toLowerCase().includes(searchQuery.toLowerCase()))
-              .sort((a, b) => a.title.localeCompare(b.title))
-              .map((event) => {
-                const option = eventOptions.find((e) => e.title === event.title && e.category === event.category);
-                if (!option) return null;
-                const isSelected = selectedEventsForBulk.includes(option.key);
-                
-                return (
-                  <article
-                    key={option.key}
-                    onClick={() => {
-                      if (isAdmin) return;
-                      setSelectedEventsForBulk(prev => 
-                        prev.includes(option.key) ? prev.filter(k => k !== option.key) : [...prev, option.key]
-                      );
-                    }}
-                    className={`group relative rounded-lg border p-6 shadow-soft transition-all duration-300 cursor-pointer hover:-translate-y-1 ${
-                      isSelected ? 'border-accent bg-accent/10 shadow-gold' : 'border-accent/15 bg-card-gradient hover:border-accent/50 hover:shadow-gold'
-                    }`}
-                  >
-                    {!isAdmin && (
-                      <div className="absolute right-4 top-4">
-                        {isSelected ? <CheckSquare className="text-accent w-5 h-5" /> : <Square className="text-muted-foreground w-5 h-5 opacity-40 group-hover:opacity-100" />}
-                      </div>
-                    )}
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-soft-gold">{event.category}</p>
-                    <h4 className="mt-4 font-display text-2xl font-bold text-cream pr-6">{event.title}</h4>
-                    <p className="mt-3 leading-7 text-muted-foreground">{event.description}</p>
-                    {!isAdmin && (
-                      <div className="mt-6 flex justify-between items-center">
-                        <Button 
-                          variant={isSelected ? "default" : "eventOutline"} 
-                          size="sm" 
-                          className={isSelected ? "bg-accent text-black font-bold" : ""}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (selectedEventsForBulk.length > 0 && !isSelected) {
-                              setSelectedEventsForBulk(prev => [...prev, option.key]);
-                            } else {
-                              chooseEvent(option.key);
-                            }
-                          }}
-                        >
-                          {isSelected ? "Selected" : "Register"}
-                        </Button>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
+
+
+
+        <footer className="border-t border-accent/15 bg-background py-10">
+          <div className="section-shell flex flex-col gap-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <Link to="/" className="text-lg tracking-normal">
+              <span className="font-display font-extrabold text-cream">பொறிக்களம்</span>
+            </Link>
+            <p>© 2026 பொறிக்களம். Crafted for connection.</p>
           </div>
-        </div>
-      </section>
-
-
-
-
-
-      <footer className="border-t border-accent/15 bg-background py-10">
-        <div className="section-shell flex flex-col gap-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <Link to="/" className="text-lg tracking-normal">
-            <span className="font-display font-extrabold text-cream">பொறிக்களம்</span>
-          </Link>
-          <p>© 2026 பொறிக்களம். Crafted for connection.</p>
-        </div>
-      </footer>
+        </footer>
       </div>
     </main>
   );

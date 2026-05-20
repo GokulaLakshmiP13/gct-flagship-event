@@ -98,8 +98,9 @@ const Dashboard = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  const userName = profile?.display_name || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Dashboard";
   const navItems = user
-    ? ["Events", (profile?.display_name || user.email?.split('@')[0] || "Dashboard")]
+    ? ["Events", userName]
     : ["Events", "About", "Register"];
 
   const selectedEvent = useMemo(
@@ -359,7 +360,7 @@ const Dashboard = () => {
 
             <div className="hidden items-center gap-8 md:flex">
               {navItems.map((item) => {
-                const isRegisterOrUser = item === "Register" || item === (profile?.display_name || user?.email?.split('@')[0] || "Dashboard");
+                const isRegisterOrUser = item === "Register" || item === userName;
                 if (item === "Events") {
                   return (
                     <Link
@@ -399,7 +400,7 @@ const Dashboard = () => {
             <div className="overflow-hidden">
               <div className="flex flex-col gap-2 rounded-md border border-accent/15 bg-card/70 p-3 backdrop-blur-xl">
                 {navItems.map((item) => {
-                  const isRegisterOrUser = item === "Register" || item === (profile?.display_name || user?.email?.split('@')[0] || "Dashboard");
+                  const isRegisterOrUser = item === "Register" || item === userName;
                   if (item === "Events") {
                     return (
                       <Link
@@ -489,7 +490,7 @@ const Dashboard = () => {
                         {authError && <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive-foreground">{authError}</p>}
                         <Button type="submit" variant="event" className="w-full" disabled={isAuthLoading}>
                           {isAuthLoading && <Loader2 className="animate-spin" />}
-                          {authMode === "signup" ? "Create secure account" : "Sign in to register"}
+                          {authMode === "signup" ? "Create secure account" : "Sign in"}
                         </Button>
                         <Button type="button" variant="eventOutline" className="w-full" onClick={handleGoogleSignIn} disabled={isAuthLoading}>
                           Continue with Google
@@ -662,16 +663,16 @@ const AdminPanel = ({ registrations, isSuperAdmin }: { registrations: Registrati
 
         <div className="flex flex-col gap-3 shrink-0">
           {isSuperAdmin && (
-            <Link 
-              to="/superadmin/events" 
+            <Link
+              to="/superadmin/events"
               className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-500 transition-colors"
             >
               Manage Events
             </Link>
           )}
-          
-          <Link 
-            to="/admin/scanner" 
+
+          <Link
+            to="/admin/scanner"
             className="flex items-center justify-center gap-2 bg-accent text-black px-6 py-3 rounded-md font-bold hover:bg-accent/90 transition-colors"
           >
             <QrCode className="w-5 h-5" />
